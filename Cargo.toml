@@ -1,0 +1,12 @@
+[package]
+name = "tokencut"
+version = "0.1.0"
+edition = "2021"
+authors = ["Tanvir Azad Mahir"]
+description = "Lightweight CLI to strip log noise and compress LLM context tokens."
+
+[dependencies]
+clap = { version = "4.4", features = ["derive"] }
+regex = "1.10"
+tiktoken-rs = "0.5"
+arboard = "3.3"
