@@ -1,100 +1,210 @@
-Markdown
+<div align="center">
+
 # ✂️ tokencut
 
-> Strip terminal log noise, collapse stack trace fluff, and trim context tokens before feeding CLI outputs into LLM coding agents.
+### Less log noise. More room to reason.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Rust](https://img.shields.io/badge/Rust-1.70%2B-orange.svg)](https://www.rust-lang.org/)
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+**A lightweight Rust CLI that turns noisy terminal output into concise, LLM-ready context.**
+
+Strip ANSI escape codes, collapse repetitive lines, and prune distracting stack frames before pasting build logs and test failures into your coding assistant.
+
+[![Rust](https://img.shields.io/badge/Built_with-Rust-CE422B?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![Rust 1.70+](https://img.shields.io/badge/Rust-1.70%2B-555?style=flat-square)](https://www.rust-lang.org/)
+[![MIT License](https://img.shields.io/badge/License-MIT-2EA44F?style=flat-square)](LICENSE)
+[![Contributions Welcome](https://img.shields.io/badge/PRs-welcome-8257E5?style=flat-square)](CONTRIBUTING.md)
+
+[**Get started**](#-quickstart) · [**See an example**](#-before--after) · [**Explore features**](#-features) · [**Contribute**](#-contributing)
+
+</div>
 
 ---
 
-## ⚡ Why tokencut?
+## The problem
 
-When debugging with LLM coding tools (Claude, GPT-4, Cursor, Codex), passing raw build logs or test outputs wastes up to **80% of your context window** on ANSI color codes, repetitive retry loops, and deep `node_modules`/`site-packages` stack trace noise.
+Coding assistants work best when they receive the **relevant failure**, not thousands of lines of terminal clutter. Raw logs often contain:
 
-`tokencut` acts as a zero-latency terminal pipe that strips non-semantic junk, formats logs into clean Markdown blocks, auto-calculates token savings, and copies the result directly to your clipboard.
+- ANSI color and control sequences
+- Repeated retries, polling messages, and progress updates
+- Long third-party stack traces that bury application frames
+- Extra text that consumes context without improving diagnosis
+
+**tokencut** is a terminal-friendly filter designed to keep useful signals while reducing that noise.
 
 ```text
-Raw Build Output (50,000 tokens) ──► [ tokencut ] ──► Cleaned LLM Prompt Context (4,200 tokens)
-                                                         (91.6% context tokens saved)
-✨ Features
-ANSI Color Code Stripping: Removes terminal escape sequences (\x1B[...]) that bloat token count.
+Build / test / runtime logs
+           │
+           ▼
+      ┌─────────────┐
+      │  ✂ tokencut │  Strip ANSI · Collapse repeats · Prune frames
+      └─────────────┘
+           │
+           ▼
+   Cleaner LLM context ──► Paste into your coding assistant
+```
 
-Duplicate Log Collapsing: Replaces repetitive polling or retry entries with clear count indicators ([... repeated 42 times ...]).
+> [!IMPORTANT]
+> Log reduction is a trade-off. Filtering can occasionally remove context needed for debugging. Keep the original log available when investigating difficult failures.
 
-Smart Stack Trace Pruning: Hides noisy third-party/runtime stack frames while keeping core application lines intact.
+## ✨ Features
 
-Instant Token Metrics: Measures exact context savings on every execution stream via local BPE tokenizers (cl100k_base).
+| Capability | What it does |
+| --- | --- |
+| **ANSI cleanup** | Removes terminal escape sequences such as `\x1B[...` that add visual noise. |
+| **Duplicate collapse** | Condenses repeated lines into readable counts, e.g. `[... repeated 42 times ...]`. |
+| **Stack-trace pruning** | Reduces noisy dependency/runtime frames to surface application-relevant lines. |
+| **Token accounting** | Reports estimated input and output token counts using a local `cl100k_base` tokenizer. |
+| **Clipboard support** | Copies the cleaned result with `-c` / `--copy`. |
+| **CLI-first workflow** | Works with redirected files and shell pipelines. |
 
-Clipboard Native: Copy cleaned Markdown context blocks to system clipboard instantly with -c / --copy.
+## 🚀 Quickstart
 
-🚀 Quickstart
-Installation & Build
-Ensure you have Rust installed, then clone and build the binary:
+### 1. Build from source
 
-Bash
-git clone [https://github.com/Tanvir-Azad-Mahir/tokencut.git](https://github.com/Tanvir-Azad-Mahir/tokencut.git)
+Install [Rust](https://www.rust-lang.org/tools/install), then:
+
+```bash
+git clone https://github.com/Tanvir-Azad-Mahir/tokencut.git
 cd tokencut
 cargo build --release
-The compiled binary will be located at ./target/release/tokencut (or .\target\release\tokencut.exe on Windows).
+```
 
-💻 Usage Examples
-Compress Build Logs & Copy to Clipboard
-PowerShell (Windows)
+The compiled executable is at:
 
-PowerShell
-Get-Content build.log | .\target\release\tokencut.exe --copy
-Bash / Zsh (Linux & macOS)
+| Platform | Binary |
+| --- | --- |
+| Linux / macOS | `./target/release/tokencut` |
+| Windows | `.\target\release\tokencut.exe` |
 
-Bash
+### 2. Clean a log
+
+**Linux / macOS**
+
+```bash
+cat build.log | ./target/release/tokencut
+```
+
+**Windows PowerShell**
+
+```powershell
+Get-Content build.log | .\target\release\tokencut.exe
+```
+
+### 3. Copy the cleaned output
+
+```bash
 cat build.log | ./target/release/tokencut --copy
-Pipe Test Runner Outputs Directly
-Bash
-pytest | tokencut -c
-# OR
-npm test | tokencut -c
-📊 Sample Output
-Given a raw input log with ANSI codes, duplicate retries, and verbose stack traces:
+```
 
-Code snippet
+Or in PowerShell:
+
+```powershell
+Get-Content build.log | .\target\release\tokencut.exe --copy
+```
+
+> **Note:** The examples above use the locally built binary. If you have separately installed `tokencut` on your `PATH`, use `tokencut` instead of its full path.
+
+## 🧪 Usage examples
+
+Pipe test and build output directly into tokencut:
+
+```bash
+pytest 2>&1 | tokencut -c
+npm test 2>&1 | tokencut -c
+cargo build 2>&1 | tokencut
+```
+
+`2>&1` combines standard error with standard output so diagnostic messages are not skipped.
+
+## 🔍 Before & after
+
+<details open>
+<summary><strong>Example: noisy logs → concise context</strong></summary>
+
+**Raw terminal output**
+
+```text
+[INFO] Starting build process...
+[INFO] Compiling module A...
+[INFO] Compiling module A...
+[INFO] Compiling module A...
+[WARN] Connection retrying...
+[WARN] Connection retrying...
+[WARN] Connection retrying...
+Traceback (most recent call last):
+  File "app.py", line 42, in main
+    process_data()
+  File "site-packages/requests/api.py", line 73, in get
+    return request("get", url, **kwargs)
+  File "site-packages/requests/sessions.py", line 589, in request
+    response = self.send(prep, **send_kwargs)
+ConnectionRefusedError: [Errno 111] Connection refused
+[ERROR] Build failed!
+```
+
+**Illustrative cleaned output**
+
+```text
 [INFO] Starting build process...
 [INFO] Compiling module A...
   [... repeated 2 times ...]
 [WARN] Connection retrying...
   [... repeated 2 times ...]
 Traceback (most recent call last):
-  File "E:\tokencut\app.py", line 42, in main
+  File "app.py", line 42, in main
     process_data()
-  [... external internal stack frames hidden ...]
-    return request('get', url, **kwargs)
-  [... external internal stack frames hidden ...]
-    self.sock = self._new_conn()
+  [... external stack frames hidden ...]
 ConnectionRefusedError: [Errno 111] Connection refused
 [ERROR] Build failed!
-Terminal Output & Metrics:
+```
 
-Plaintext
-✂️ tokencut: 224 tokens → 127 tokens (43.3% saved)
+</details>
+
+Example CLI metrics from the project description:
+
+```text
+✂ tokencut: 224 tokens → 127 tokens (43.3% saved)
 📋 Copied formatted log to clipboard!
-📈 Benchmarks
-Test Target	Raw Log Size	Raw Tokens	tokencut Tokens	Token Savings
-Pytest Suite Output	1.2 MB	45,200	8,100	82.1%
-Next.js Production Build Log	850 KB	28,400	5,900	79.2%
-Cargo Build Stack Trace	320 KB	11,100	2,800	74.7%
-🤝 Contributing
-Contributions are welcome! Please feel free to open issues, submit pull requests, or suggest new log filtering patterns.
+```
 
-Fork the Project
+> The example is illustrative; output and savings depend on the actual input and filtering configuration.
 
-Create your Feature Branch (git checkout -b feature/AmazingFeature)
+## 📊 Benchmark examples
 
-Commit your Changes (git commit -m 'feat: add new stack trace pattern')
+The following figures were supplied as **sample results**, not independently reproduced measurements. Replace them with benchmark scripts, sample logs, environment details, and repeatable results before presenting them as verified performance claims.
 
-Push to the Branch (git push origin feature/AmazingFeature)
+| Workload | Raw log size | Input tokens | Output tokens | Reported reduction |
+| :--- | ---: | ---: | ---: | ---: |
+| Pytest suite output | 1.2 MB | 45,200 | 8,100 | 82.1% |
+| Next.js production build | 850 KB | 28,400 | 5,900 | 79.2% |
+| Cargo build stack trace | 320 KB | 11,100 | 2,800 | 74.7% |
 
-Open a Pull Request
+**Token reduction formula:** `(input tokens − output tokens) / input tokens × 100`.
 
-📜 License
-Distributed under the MIT License. See LICENSE for more information.
+## 🔐 Privacy & design
+
+Logs are processed locally by the CLI. Review generated output before sharing it with any external service: reducing noise does **not** automatically remove credentials, secrets, or personal data.
+
+## 🤝 Contributing
+
+Bug reports, filtering rules, documentation improvements, and pull requests are welcome.
+
+1. Fork the repository.
+2. Create a branch: `git checkout -b feature/my-improvement`.
+3. Commit your changes: `git commit -m "feat: improve log filtering"`.
+4. Push the branch and open a pull request.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for any additional project guidelines.
+
+## 📄 License
+
+Distributed under the **MIT License**. See [LICENSE](LICENSE) for details.
+
+---
+
+<div align="center">
+
+**Give your coding agent the error—not the entire terminal history.**
+
+[⭐ Star tokencut](https://github.com/Tanvir-Azad-Mahir/tokencut) · [Report an issue](https://github.com/Tanvir-Azad-Mahir/tokencut/issues)
+
+</div>
