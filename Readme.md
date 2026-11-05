@@ -12,6 +12,7 @@ Strip ANSI escape codes, collapse repetitive lines, and prune distracting stack 
 [![Rust 1.70+](https://img.shields.io/badge/Rust-1.70%2B-555?style=flat-square)](https://www.rust-lang.org/)
 [![MIT License](https://img.shields.io/badge/License-MIT-2EA44F?style=flat-square)](LICENSE)
 [![Contributions Welcome](https://img.shields.io/badge/PRs-welcome-8257E5?style=flat-square)](CONTRIBUTING.md)
+[![CI](https://github.com/Tanvir-Azad-Mahir/tokencut/actions/workflows/ci.yml/badge.svg)](https://github.com/Tanvir-Azad-Mahir/tokencut/actions/workflows/ci.yml)
 
 [**Get started**](#-quickstart) · [**See an example**](#-before--after) · [**Explore features**](#-features) · [**Contribute**](#-contributing)
 
