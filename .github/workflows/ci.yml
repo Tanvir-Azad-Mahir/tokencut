@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  rust:
+    name: Rust build and tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo dependencies and build artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run tests
+        run: cargo test --locked
+
+      - name: Build release binary
+        run: cargo build --release --locked
+
+      - name: Smoke test CLI pipeline
+        shell: bash
+        run: |
+          printf 'retry\nretry\nfailed\n' | ./target/release/tokencut --no-prune > /tmp/tokencut-output.txt
+          grep -q 'repeated 1 times' /tmp/tokencut-output.txt
+          grep -q 'failed' /tmp/tokencut-output.txt
