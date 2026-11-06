@@ -1,3 +1,4 @@
+
 name: Release
 
 on:
@@ -13,6 +14,7 @@ jobs:
   build:
     name: Build ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
+
     strategy:
       fail-fast: false
       matrix:
@@ -21,14 +23,17 @@ jobs:
             os: ubuntu-24.04
             target: x86_64-unknown-linux-gnu
             extension: tar.gz
+
           - name: windows-x64
             os: windows-2025
             target: x86_64-pc-windows-msvc
             extension: zip
+
           - name: macos-arm64
             os: macos-15
             target: aarch64-apple-darwin
             extension: tar.gz
+
           - name: macos-x64
             os: macos-15-intel
             target: x86_64-apple-darwin
@@ -36,7 +41,7 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -71,7 +76,7 @@ jobs:
             -DestinationPath "dist/tokencut-${{ github.ref_name }}-${{ matrix.name }}.zip"
 
       - name: Upload packaged executable
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: tokencut-${{ matrix.name }}
           path: dist/*
@@ -83,11 +88,13 @@ jobs:
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-24.04
+
     permissions:
       contents: write
+
     steps:
       - name: Download all release archives
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           pattern: tokencut-*
           path: release-assets
