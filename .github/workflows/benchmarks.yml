@@ -1,3 +1,4 @@
+
 name: Benchmarks
 
 on:
@@ -9,17 +10,27 @@ permissions:
 jobs:
   benchmark:
     runs-on: ubuntu-24.04
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
       - name: Build optimized CLI
         run: cargo build --release --locked
+
       - name: Run deterministic benchmark suite
         run: python3 benchmarks/run.py --blocks 200 --runs 7 --warmup 2
-      - name: Upload results and sample fixtures
-        uses: actions/upload-artifact@v4
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v6
         with:
           name: tokencut-benchmarks-${{ github.run_id }}
           path: benchmarks/results/
           retention-days: 30
+          if-no-files-found: error
