@@ -63,7 +63,7 @@ else
   echo "Neither sha256sum nor shasum is installed; refusing unverified installation." >&2
   exit 1
 fi
-if [[ "${actual,,}" != "${expected,,}" ]]; then
+if [[ "$(printf '%s' "$actual" | tr '[:upper:]' '[:lower:]')" != "$(printf '%s' "$expected" | tr '[:upper:]' '[:lower:]')" ]]; then
   echo "SHA-256 checksum mismatch; refusing installation." >&2
   exit 1
 fi
